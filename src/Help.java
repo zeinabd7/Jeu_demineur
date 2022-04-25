@@ -5,7 +5,7 @@ import java.awt.event.ActionListener;
 import javax.swing.border.*;
 
 
-public class Apropos extends JDialog implements ActionListener {
+public class Help extends JDialog implements ActionListener {
   private JPanel panel = new JPanel();
   private GridBagLayout gridBagLayout = new GridBagLayout();
   private JLabel titre = new JLabel();
@@ -13,7 +13,7 @@ public class Apropos extends JDialog implements ActionListener {
   private JLabel lien = new JLabel();
   private Border border1;
 
-  public Apropos(Demineur demineur, String title, boolean modal) {
+  public Help(Demineur demineur, String title, boolean modal) {
     try {
       jbInit(title);
       pack();
@@ -61,7 +61,7 @@ public class Apropos extends JDialog implements ActionListener {
             ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
   }
-  //Apropos doit implementer la fonction suivante s'il veut utiliser l'interface ActionListener
+
   public void actionPerformed(ActionEvent e) {
     this.setVisible(false);
   }

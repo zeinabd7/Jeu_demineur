@@ -2,19 +2,19 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class DeminCase
+public class Traitement
     extends JPanel
     implements MouseListener {
 
-  private int etat = 0; //0 = rien; 1==cliquer; 2=drapeau; 3=?; 4=boum; 5=mine; 6=erreur de drapeau
-  private boolean mine = false; //Si il y a une mine
+  private int etat = 0;
+  private boolean mine = false;
   private boolean selected = false;
   private boolean blocked = false;
   private int chiffre = 0;
 
-  private Graphisme gr = null; //l'objet qui contient les graphismes.
+  private Design gr = null; //l'objet qui contient les graphismes.
 
-  public DeminCase() {
+  public Traitement() {
     try {
       //construction de la case
       jbInit();
@@ -25,7 +25,7 @@ public class DeminCase
   }
 
   private void jbInit() throws Exception {
-    this.setBackground(Graphisme.dessus);
+    this.setBackground(Design.dessus);
     this.setMaximumSize(new Dimension(16, 16)); //On impose la taille
     this.setMinimumSize(new Dimension(16, 16));
     this.addMouseListener(this);
@@ -136,16 +136,16 @@ public class DeminCase
     return blocked;
   }
 
-  public void setGraphisme(Graphisme gr) {
+  public void setGraphisme(Design gr) {
     this.gr = gr;
   }
 
-  public void reset() { //remise � zero des principaux param�tres
+  public void reset() {
     this.etat = 0;
     this.selected = false;
     setMine(false);
     setBlocked(false);
-    //repaint();
+
   }
 }
 

@@ -14,13 +14,12 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   private JPanel panneauTemps = new JPanel();
   private JLabel affMines = new JLabel(); // l'afficheur du nombre de mines
   private JButton boutonNouveau = new JButton();
-  // private JCheckBox pause1 = new JCheckBox("Pause1");
   private JLabel affTemps = new JLabel(); // l'afficheur du temps �coul�
-  private Border borderPanneaux;
   private JMenuBar menu = new JMenuBar();
   private JMenu partie = new JMenu("Partie");
   private JCheckBox pause = new JCheckBox("Pause");
   private JMenu help = new JMenu("?");
+  private JButton stat = new JButton("Statisques");
 
 
   JLabel labM = new JLabel("Mines:");
@@ -37,22 +36,20 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   private Component box1;
   private Component box4;
 
-  private Icon cool, oups, boum, win; // images du bouton
 
-  int nDrapeau = 0; // nombres de drapeaux pos�s
-  private int nMines; // nombre total de mines
-  private int LARGEUR; // nombre de cases selon la largeur
-  private int HAUTEUR; // nombre de cases selon la hauteur
-  private int nCases; // nombre de cases non d�couvertes restantes
-  DeminCase[][] jeux; // tableau des cases du jeux
+  int nDrapeau = 0;
+  protected int nMines;
+  private int LARGEUR;
+  private int HAUTEUR;
+  protected int nCases;
+  Traitement[][] jeux; // tableau des cases du jeux
   private String mines; // cha�nes de caract�re qui contient la r�partition des mines
-  private int[][] casesSelectionnees = new int[8][2]; // reperages des cases selectionnees pour les deselectionnes lors
-  // du relachement de la sourie
-  private Temps temps = new Temps(affTemps); // timer sur l'affichage Segment affTemps
+  private int[][] casesSelectionnees = new int[8][2];
+  private Temps temps = new Temps(affTemps);
+  public Statistiques st=new Statistiques();
   private int TYPE;
 
-  // constructeur en fonction du nombre de cases, de mines et du type.
-  // Le type permet de selectionner le bon mode dans le menu.
+
   // type == 1 -> D�butant
   // type == 2 -> Interm�diaire
   // type == 3 -> Expert
@@ -62,19 +59,16 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     nCases = HAUTEUR * LARGEUR;
     nMines = mines;
     TYPE = type;
-    jeux = new DeminCase[HAUTEUR][LARGEUR];
+    jeux = new Traitement[HAUTEUR][LARGEUR];
 
-    // R�cup�rer les gif dans le fichier .jar
-    // URL imgUrl;
 
-    // cr�ation des cases
     for (int i = 0; i < HAUTEUR; i++) {
       for (int j = 0; j < LARGEUR; j++) {
-        jeux[i][j] = new DeminCase();
+        jeux[i][j] = new Traitement();
       }
     }
 
-    // s�l�ction du bon mode dans le JMenu
+
     if (type == 1)
       menuDebutant.setSelected(true);
     if (type == 2)
@@ -97,9 +91,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
 
   // initialises le jeux
   public void nouveau() {
-    // r�initialisation des principaux param�tres
     temps.cancel(); // Timer � 0
-    boutonNouveau.setIcon(cool); // Icon par d�faut du bouton
     nDrapeau = 0;
     nCases = HAUTEUR * LARGEUR;
     affMines.setText(String.valueOf(nMines));
@@ -108,9 +100,6 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     panneauJeux.setVisible(true); // peut �tre � false en raison de la pause
     pause.setSelected(false);
 
-    // G�n�ration des mines
-    // dans la cha�ne, 1=mine 0=rien
-    // on cr�� le bon nombre de mines puis on compl�te par des cases vides jusqu'�
     // obtenir le nombre de cases total
     mines = "";
     for (int i = 0; i < nMines; i++)
@@ -186,8 +175,6 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   }
 
   private void jbInit() throws Exception {
-    borderPanneaux = BorderFactory.createEtchedBorder(Color.white,
-            new Color(70, 130, 255));
     box2 = Box.createGlue(); // utilis�s dans le jPanel1 pour la disposition
     box3 = Box.createGlue();
     box1 = Box.createHorizontalStrut(8);
@@ -234,26 +221,25 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     apropos.setMnemonic('A');
     help.add(apropos);
     menu.add(help);
+    menu.add(stat);
     this.setJMenuBar(menu);
 
     affMines.setMaximumSize(new Dimension(49, 27));
     affTemps.setMaximumSize(new Dimension(49, 27));
     boutonNouveau.setMaximumSize(new Dimension(25, 25));
     boutonNouveau.setMinimumSize(new Dimension(25, 25));
-    panneauBas.setBorder(borderPanneaux);
     panneauBas.setPreferredSize(new Dimension(450, 9));
     panneauBas.setLayout(layoutpanneauBas);
-    panneauJeux.setBorder(borderPanneaux);
     panneauJeux.setPreferredSize(new Dimension(tailleX, tailleY));
     panneauJeux.setLayout(layoutPanneauJeux);
     affMines.setText(String.valueOf(nMines));
     affMines.setFont(new java.awt.Font("Serif", 1, 20));
     // menu.add(boutonNouveau);
+
     affTemps.setText(String.valueOf(0));
     affTemps.setFont(new java.awt.Font("Serif", 1, 20));
     boutonNouveau.setPreferredSize(new Dimension(25, 25));
     boutonNouveau.setFocusPainted(false);
-    boutonNouveau.setIcon(cool);
     boutonNouveau.setMargin(new Insets(0, 0, 0, 0));
     boutonNouveau.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -275,7 +261,6 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     panneauBas.add(labM,null);
     panneauBas.add(panneauMines, null);
     panneauBas.add(box2, null);
-    // panneauBas.add(boutonNouveau, null);
     panneauBas.add(pause, null);
     panneauBas.add(box3, null);
     panneauBas.add(labT,null);
@@ -283,13 +268,13 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     this.getContentPane().add(panneauBas, BorderLayout.CENTER);
     this.getContentPane().add(panneauJeux, BorderLayout.NORTH);
 
-    // gr contient les graphismes de toutes les cases
-    Graphisme gr = new Graphisme(this.getGraphicsConfiguration());
+
+    Design gr = new Design(this.getGraphicsConfiguration());
 
     // placement des cases dans la fen�tre
     for (int i = 0; i < HAUTEUR; i++) {
       for (int j = 0; j < LARGEUR; j++) {
-        jeux[i][j].setGraphisme(gr); // on indique les graphismes � la cases
+        jeux[i][j].setGraphisme(gr); // on indique les graphismes  la cases
         panneauJeux.add(jeux[i][j],
                 new GridBagConstraints(j, i, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
                         new Insets(0, 0, 0, 0), 0, 0));
@@ -326,9 +311,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
       int y = (int) ((JPanel) e.getSource()).getLocation().getY() + e.getY() +
               22;
       int[] coord = caseClic(x, y); // coordonn�es de la case enfonc�e enregistr�es dans coord
-      boutonNouveau.setIcon(oups); // bouton
 
-      // si clic droit au dessus d'une case
       if (e.getButton() == e.BUTTON3 && coord[1] != -1 && coord[0] != -1) {
         int temp = jeux[coord[1]][coord[0]].getEtat();
         switch (temp) {
@@ -446,11 +429,10 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
       int y = (int) ((JPanel) e.getSource()).getLocation().getY() + e.getY() +
               22;
       int[] coord = caseClic(x, y); // on r�cup�re les coordonn�es
-      boutonNouveau.setIcon(cool); // remise du bouton sur l'icone cool
       if (coord[0] != -1 && coord[1] != -1) { // si on est au dessus d'une case
         y = coord[1];
         x = coord[0];
-        if (e.getButton() == e.BUTTON1) { // si clic gauche, on d�couvre
+        if (e.getButton() == e.BUTTON1) {
           decouvre(y, x);
           repaint();
         }
@@ -567,7 +549,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     else if ((jeux[y][x].getEtat() == 0 || jeux[y][x].getEtat() == 3) && jeux[y][x].isMine()) {
       temps.cancel(); // fin du timer
       jeux[y][x].setEtat(4); //met le fond du mine cliquer en rouge
-      boutonNouveau.setIcon(boum);
+      //boutonNouveau.setIcon(boum);
       for (int i = 0; i < HAUTEUR; i++) {
         for (int j = 0; j < LARGEUR; j++) {
           jeux[i][j].removeMouseListener(this); // on bloque les cases restantes
@@ -584,17 +566,17 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
         }
       }
     }
-    // Si on gagne, c'est � dire le nombre de cases restantes est �gal au nombre de mines restantes
+    // Si on gagne, c'est  dire le nombre de cases restantes est egal au nombre de mines restantes
     if (nCases == nMines && !jeux[0][0].isBlocked()) {
       temps.cancel(); // fin du timer
+      st.gagner();
       affMines.setText(String.valueOf(0));
-      boutonNouveau.setIcon(win);
       for (int i = 0; i < HAUTEUR; i++) {
         for (int j = 0; j < LARGEUR; j++) {
           jeux[i][j].removeMouseListener(this); // on bloque les cases
           jeux[i][j].setBlocked(true);
           if (jeux[i][j].isMine())
-            jeux[i][j].setEtat(2); // om met des drapeaux partout!!
+            jeux[i][j].setEtat(2);
         }
       }
     }
@@ -621,8 +603,6 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     return false;
   }
 
-  // v�rifie si la case existe et si elle n'est pas d�couverte ou si elle porte un
-  // '?'
   public boolean decouvrirPartiel3(int x, int y) {
     if (x >= 0 && y >= 0 && x < LARGEUR && y < HAUTEUR) {
       if (jeux[y][x].getEtat() == 0 || jeux[y][x].getEtat() == 3)
@@ -645,7 +625,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   public void windowIconified(WindowEvent e) {
     try {
       temps.suspend();
-    } // pause du timer si il existe!!
+    }
     catch (Exception esc) {
     }
   }
@@ -703,7 +683,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
         temps.resume();
       }
     } else if (e.getSource() == apropos) {
-      Apropos app = new Apropos(this, "Demineur", true);
+      Help app = new Help(this, "Demineur", true);
       app.setLocation((int) this.getLocation().getX() + 20,
               (int) this.getLocation().getY() + 20);
       app.setVisible(true);

@@ -1,6 +1,6 @@
  import java.awt.image.*;
 import java.awt.*;
-public class Graphisme {
+public class Design {
 public static VolatileImage drapeau, question, questionSel, mine, boum,
       erreur;
   public static VolatileImage[] chiffre = new VolatileImage[9];
@@ -8,7 +8,7 @@ public static VolatileImage drapeau, question, questionSel, mine, boum,
 
   public static Color dessus = new Color(230, 230, 250); //couleur du "dessus" des cases
 
-  public Graphisme(GraphicsConfiguration gr) {
+  public Design(GraphicsConfiguration gr) {
     //Les couleurs des chiffres
     couleurs[0] = new Color(0, 0, 255);
     couleurs[1] = new Color(0, 128, 0);
