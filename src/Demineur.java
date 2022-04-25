@@ -28,7 +28,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   JCheckBoxMenuItem menuDebutant = new JCheckBoxMenuItem("Débutant");
   JCheckBoxMenuItem menuIntermediaire = new JCheckBoxMenuItem("Intermediaire");
   JCheckBoxMenuItem menuExpert = new JCheckBoxMenuItem("Expert");
-  private JMenuItem apropos = new JMenuItem("A propos");
+  private JMenuItem apropos = new JMenuItem("Description");
   private BoxLayout layoutpanneauBas = new BoxLayout(panneauBas,
           BoxLayout.LINE_AXIS);
   private Component box2; // Boxes utilis�es dans le BoxLayout
