@@ -6,21 +6,22 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class Demineur extends JFrame implements MouseListener, WindowListener, ActionListener {
+public class Demineur extends JFrame implements MouseListener, ActionListener {
   private JPanel panneauBas = new JPanel();
   private JPanel panneauJeux = new JPanel();
   private GridBagLayout layoutPanneauJeux = new GridBagLayout();
   private JPanel panneauMines = new JPanel();
   private JPanel panneauTemps = new JPanel();
-  private JLabel affMines = new JLabel(); // l'afficheur du nombre de mines
+  private JLabel affMines = new JLabel();
   private JButton boutonNouveau = new JButton();
-  private JLabel affTemps = new JLabel(); // l'afficheur du temps �coul�
+  private JLabel affTemps = new JLabel();
   private JMenuBar menu = new JMenuBar();
   private JMenu partie = new JMenu("Partie");
   private JCheckBox pause = new JCheckBox("Pause");
   private JMenu help = new JMenu("?");
   private JButton stat = new JButton("Statisques");
-
+  JDialog jd = new JDialog();
+  JLabel jLabel = new JLabel("Vous avez perdu.");
 
   JLabel labM = new JLabel("Mines:");
   JLabel labT = new JLabel("Temps:");
@@ -31,7 +32,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   private JMenuItem apropos = new JMenuItem("Description");
   private BoxLayout layoutpanneauBas = new BoxLayout(panneauBas,
           BoxLayout.LINE_AXIS);
-  private Component box2; // Boxes utilis�es dans le BoxLayout
+  private Component box2;
   private Component box3;
   private Component box1;
   private Component box4;
@@ -39,31 +40,31 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
 
   int nDrapeau = 0;
   protected int nMines;
-  private int LARGEUR;
-  private int HAUTEUR;
+  private int largeur;
+  private int hauteur;
   protected int nCases;
-  Traitement[][] jeux; // tableau des cases du jeux
-  private String mines; // cha�nes de caract�re qui contient la r�partition des mines
+  Traitement[][] jeux;
+  private String mines;
   private int[][] casesSelectionnees = new int[8][2];
   private Temps temps = new Temps(affTemps);
-  public Statistiques st=new Statistiques();
+  private int nb_gagnee;
+  private int nb_perdue;
+  private int nb;//nombre de parties
   private int TYPE;
 
 
-  // type == 1 -> D�butant
-  // type == 2 -> Interm�diaire
-  // type == 3 -> Expert
+
   public Demineur(int hauteur, int largeur, int mines, int type) {
-    HAUTEUR = hauteur;
-    LARGEUR = largeur;
-    nCases = HAUTEUR * LARGEUR;
+    this.hauteur = hauteur;
+    this.largeur = largeur;
+    nCases = this.hauteur * this.largeur;
     nMines = mines;
     TYPE = type;
-    jeux = new Traitement[HAUTEUR][LARGEUR];
+    jeux = new Traitement[this.hauteur][this.largeur];
 
 
-    for (int i = 0; i < HAUTEUR; i++) {
-      for (int j = 0; j < LARGEUR; j++) {
+    for (int i = 0; i < this.hauteur; i++) {
+      for (int j = 0; j < this.largeur; j++) {
         jeux[i][j] = new Traitement();
       }
     }
@@ -80,7 +81,6 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     nouveau();
 
     try {
-      // Graphisme
       jbInit();
       this.setVisible(true);
       boutonNouveau.requestFocus();
@@ -88,44 +88,78 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
       e.printStackTrace();
     }
   }
+  public  int getNb_gagnee(){return nb_gagnee;}
+  public  int getNb_perdue(){return nb_perdue;}
+  public  int getNb(){return nb;}
+  public static void perdre(){
+    JFrame jFrame = new JFrame();
+    JDialog jd = new JDialog(jFrame);
+    jd.setLayout(new FlowLayout());
+    jd.setBounds(500, 300, 200, 200);
+    JLabel jLabel = new JLabel("VOUS AVEZ PERDU");
+    JButton jButton = new JButton("FERMER");
+    jButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        jd.setVisible(false);
+      }
+    });
+    jd.add(jLabel);
+    jd.add(jButton);
+    jd.setVisible(true);
+  }
+  public static void gagner(){
+    JFrame jFrame = new JFrame();
+    JDialog jd = new JDialog(jFrame);
+    jd.setLayout(new FlowLayout());
+    jd.setBounds(500, 300, 200, 200);
+    JLabel jLabel = new JLabel("VOUS AVEZ GAGNE");
+    JButton jButton = new JButton("FERMER");
+    jButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        jd.setVisible(false);
+      }
+    });
+    jd.add(jLabel);
+    jd.add(jButton);
+    jd.setVisible(true);
+  }
 
-  // initialises le jeux
   public void nouveau() {
-    temps.cancel(); // Timer � 0
+    temps.cancel();
     nDrapeau = 0;
-    nCases = HAUTEUR * LARGEUR;
+    nCases = hauteur * largeur;
     affMines.setText(String.valueOf(nMines));
-
+    nb++;
     affTemps.setText(String.valueOf(0));
-    panneauJeux.setVisible(true); // peut �tre � false en raison de la pause
+    panneauJeux.setVisible(true);
     pause.setSelected(false);
 
-    // obtenir le nombre de cases total
+
     mines = "";
     for (int i = 0; i < nMines; i++)
       mines = mines + "1";
-    while (mines.length() < HAUTEUR * LARGEUR) {
+    while (mines.length() < hauteur * largeur) {
       int i = (int) (Math.random() * (mines.length() + 1));
       mines = mines.substring(0, i) + "0" + mines.substring(i);
     }
 
-    // param�tres des cases
-    for (int i = 0; i < HAUTEUR; i++) {
-      for (int j = 0; j < LARGEUR; j++) {
+
+    for (int i = 0; i < hauteur; i++) {
+      for (int j = 0; j < largeur; j++) {
         jeux[i][j].reset();
-        jeux[i][j].removeMouseListener(this); // n�c�ssaire pour �viter un bug lors de l'appel de nouveau() une 2�me
-        // fois
-        jeux[i][j].addMouseListener(this); // pour les clics!!!
-        if (mines.charAt(i * LARGEUR + j) == '1') {
+        jeux[i][j].removeMouseListener(this);
+        jeux[i][j].addMouseListener(this);
+        if (mines.charAt(i * largeur + j) == '1') {
           jeux[i][j].setMine(true);
         }
       }
     }
     repaint();
 
-    // comptage pour chaque case du nombre de mines autour
-    for (int i = 0; i < HAUTEUR; i++) {
-      for (int j = 0; j < LARGEUR; j++) {
+    for (int i = 0; i < hauteur; i++) {
+      for (int j = 0; j < largeur; j++) {
         if (!jeux[i][j].isMine()) {
           int n = 0;
           try {
@@ -168,7 +202,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
               n++;
           } catch (java.lang.ArrayIndexOutOfBoundsException e) {
           }
-          jeux[i][j].setChiffre(n); // on indique � la case le nombre de mines
+          jeux[i][j].setChiffre(n);
         }
       }
     }
@@ -182,28 +216,16 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     box4 = Box.createHorizontalStrut(8);
     box4.setSize(5, 50);
 
-    this.addWindowListener(this);
-
-    int tailleX = LARGEUR * 16 + 20; // 20 pour la marge
-    int tailleY = HAUTEUR * 16 + 20;
-    if (tailleX < 160)
-      tailleX = 150; // taille minimum en largeur
-
-    this.setSize(tailleX + 6, tailleY + 50 + 23 + 25); // 6=largeur du cadre de la fenetre, 25=hauteur de la barre
-    // windows
+    int tailleX = largeur * 30 + 50;
+    int tailleY = hauteur * 30 + 50;
+    this.setSize(tailleX + 6, tailleY + 50 + 23 + 25);
     this.setTitle("Demineur");
     this.setResizable(true);
 
-    // MENU
-    partie.setMnemonic('P');
     menuNouveau.addActionListener(this);
-    menuNouveau.setMnemonic('N');
     menuDebutant.addActionListener(this);
-    menuDebutant.setMnemonic('D');
     menuIntermediaire.addActionListener(this);
-    menuIntermediaire.setMnemonic('I');
     menuExpert.addActionListener(this);
-    menuExpert.setMnemonic('E');
     partie.add(menuNouveau);
     partie.add(new JSeparator());
     partie.add(menuDebutant);
@@ -211,30 +233,25 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     partie.add(menuExpert);
     menu.setBorderPainted(false);
     menu.add(partie);
-    pause.setMnemonic('a');
     pause.setOpaque(false);
     pause.setFocusPainted(false);
     pause.addActionListener(this);
     menu.add(pause);
-    help.setMnemonic('?');
     apropos.addActionListener(this);
-    apropos.setMnemonic('A');
     help.add(apropos);
     menu.add(help);
     menu.add(stat);
+    stat.addActionListener(this);
     this.setJMenuBar(menu);
 
     affMines.setMaximumSize(new Dimension(49, 27));
     affTemps.setMaximumSize(new Dimension(49, 27));
-    boutonNouveau.setMaximumSize(new Dimension(25, 25));
-    boutonNouveau.setMinimumSize(new Dimension(25, 25));
     panneauBas.setPreferredSize(new Dimension(450, 9));
     panneauBas.setLayout(layoutpanneauBas);
     panneauJeux.setPreferredSize(new Dimension(tailleX, tailleY));
     panneauJeux.setLayout(layoutPanneauJeux);
     affMines.setText(String.valueOf(nMines));
     affMines.setFont(new java.awt.Font("Serif", 1, 20));
-    // menu.add(boutonNouveau);
 
     affTemps.setText(String.valueOf(0));
     affTemps.setFont(new java.awt.Font("Serif", 1, 20));
@@ -250,7 +267,6 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     panneauMines.add(affMines);
     panneauMines.setBackground(new Color(70, 130, 255));
     panneauMines.setPreferredSize(new Dimension(5,2));
-
 
     panneauTemps.add(affTemps);
     panneauTemps.setBackground(new Color(255, 70, 70));
@@ -271,10 +287,9 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
 
     Design gr = new Design(this.getGraphicsConfiguration());
 
-    // placement des cases dans la fen�tre
-    for (int i = 0; i < HAUTEUR; i++) {
-      for (int j = 0; j < LARGEUR; j++) {
-        jeux[i][j].setGraphisme(gr); // on indique les graphismes  la cases
+    for (int i = 0; i < hauteur; i++) {
+      for (int j = 0; j < largeur; j++) {
+        jeux[i][j].setGraphisme(gr);
         panneauJeux.add(jeux[i][j],
                 new GridBagConstraints(j, i, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE,
                         new Insets(0, 0, 0, 0), 0, 0));
@@ -283,16 +298,16 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   }
 
   public int[] caseClic(int x, int y) {
-    int offsetX = (int) jeux[0][0].getX() + 3; // d�calage par rapport au coin en haut � gauche de la fenetre
+    int offsetX = (int) jeux[0][0].getX() + 3;
     int offsetY = (int) jeux[0][0].getY() + 22;
     int posx = -1, posy = -1;
     if (x - offsetX >= 0)
       posx = (x - offsetX) / 16;
-    if (posx >= LARGEUR)
+    if (posx >= largeur)
       posx = -1;
     if (y - offsetY >= 0 && posx != -1)
       posy = (y - offsetY) / 16;
-    if (posy >= HAUTEUR)
+    if (posy >= hauteur)
       posy = -1;
     if (posy == -1)
       posx = -1;
@@ -315,109 +330,35 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
       if (e.getButton() == e.BUTTON3 && coord[1] != -1 && coord[0] != -1) {
         int temp = jeux[coord[1]][coord[0]].getEtat();
         switch (temp) {
-          case 0: // affichage d'un drapeau
+          case 0:
             jeux[coord[1]][coord[0]].setEtat(2);
             nDrapeau++;
             affMines.setText(String.valueOf(nMines - nDrapeau));
             break;
-          case 2: // affichage d'un ?
+          case 2:
             jeux[coord[1]][coord[0]].setEtat(3);
             nDrapeau--;
             affMines.setText(String.valueOf(nMines - nDrapeau));
             break;
-          case 3: // RAZ
+          case 3:
             jeux[coord[1]][coord[0]].setEtat(0);
             break;
         }
         jeux[coord[1]][coord[0]].repaint();
       }
 
-      // si clic gauche, on selectionne les cases autour
-
       y = coord[1];
       x = coord[0];
       if (e.getButton() == e.BUTTON1 && x != -1 && y != -1 &&
               jeux[y][x].getEtat() == 1 && jeux[y][x].getChiffre() != 0) {
-        // on enregistre les coordonn�es des cases s�l�ctionn�es
-        for (int i = 0; i < 7; i++) {
-          for (int j = 0; j < 2; j++) {
-            casesSelectionnees[i][j] = -1; // effacement de la m�moire
-          }
-        }
-        // essai sur les huit cases autour
-        try {
-          if (jeux[y - 1][x - 1].getEtat() == 0) {
-            jeux[y - 1][x - 1].setSelected(true);
-            casesSelectionnees[0][0] = y - 1;
-            casesSelectionnees[0][1] = x - 1;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y - 1][x].getEtat() == 0) {
-            jeux[y - 1][x].setSelected(true);
-            casesSelectionnees[1][0] = y - 1;
-            casesSelectionnees[1][1] = x;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y - 1][x + 1].getEtat() == 0) {
-            jeux[y - 1][x + 1].setSelected(true);
-            casesSelectionnees[2][0] = y - 1;
-            casesSelectionnees[2][1] = x + 1;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y][x - 1].getEtat() == 0) {
-            jeux[y][x - 1].setSelected(true);
-            casesSelectionnees[3][0] = y;
-            casesSelectionnees[3][1] = x - 1;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y][x + 1].getEtat() == 0) {
-            jeux[y][x + 1].setSelected(true);
-            casesSelectionnees[4][0] = y;
-            casesSelectionnees[4][1] = x + 1;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y + 1][x - 1].getEtat() == 0) {
-            jeux[y + 1][x - 1].setSelected(true);
-            casesSelectionnees[5][0] = y + 1;
-            casesSelectionnees[5][1] = x - 1;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y + 1][x].getEtat() == 0) {
-            jeux[y + 1][x].setSelected(true);
-            casesSelectionnees[6][0] = y + 1;
-            casesSelectionnees[6][1] = x;
-          }
-        } catch (Exception exc) {
-        }
-        try {
-          if (jeux[y + 1][x + 1].getEtat() == 0) {
-            jeux[y + 1][x + 1].setSelected(true);
-            casesSelectionnees[7][0] = y + 1;
-            casesSelectionnees[7][1] = x + 1;
-          }
-        } catch (Exception exc) {
-        }
       }
     } catch (java.lang.ClassCastException ex) {
-    } // si clic n'import o�
+    }
   }
 
   public void mouseReleased(MouseEvent e) {
 
-    // Si c'est le premier clic du jeux, on d�marre le timer
-    if (nCases == HAUTEUR * LARGEUR && e.getButton() == e.BUTTON1) {
+    if (nCases == hauteur * largeur && e.getButton() == e.BUTTON1) {
       temps.cancel();
       temps = new Temps(affTemps);
       temps.start();
@@ -425,53 +366,21 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
 
     try {
       int x = (int) ((JPanel) e.getSource()).getLocation().getX() + e.getX() +
-              3; // g�n�re des exceptions � cause du cast
+              3;
       int y = (int) ((JPanel) e.getSource()).getLocation().getY() + e.getY() +
               22;
-      int[] coord = caseClic(x, y); // on r�cup�re les coordonn�es
-      if (coord[0] != -1 && coord[1] != -1) { // si on est au dessus d'une case
+      int[] coord = caseClic(x, y);
+      if (coord[0] != -1 && coord[1] != -1) {
         y = coord[1];
         x = coord[0];
         if (e.getButton() == e.BUTTON1) {
           decouvre(y, x);
           repaint();
         }
-        jeux[y][x].setSelected(false); // on d�selctionne la case ainsi que celle de la m�moire casesSelectionnees
-        try {
-          jeux[casesSelectionnees[0][0]][casesSelectionnees[0][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[1][0]][casesSelectionnees[1][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[2][0]][casesSelectionnees[2][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[3][0]][casesSelectionnees[3][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[4][0]][casesSelectionnees[4][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[5][0]][casesSelectionnees[5][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[6][0]][casesSelectionnees[6][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
-        try {
-          jeux[casesSelectionnees[7][0]][casesSelectionnees[7][1]].setSelected(false);
-        } catch (Exception exc) {
-        }
+        jeux[y][x].setSelected(false);
       }
     } catch (java.lang.ClassCastException ex) {
-    } // Si le clic n'est pas au dessus d'un panneau
+    }
   }
 
   public void mouseEntered(MouseEvent e) {
@@ -480,171 +389,77 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
   public void mouseExited(MouseEvent e) {
   }
 
-  // d�clench�e par un appuie sur le bouton
   void boutonNouveau_actionPerformed(ActionEvent e) {
     if (!pause.isSelected())
       nouveau();
   }
 
-  // m�thode pour d�couvrir les cases
   public void decouvre(int y, int x) {
     // Si la case est vide ou avec un ?
     if ((jeux[y][x].getEtat() == 0 || jeux[y][x].getEtat() == 3) && !jeux[y][x].isMine())
     {
       nCases--; // nombre de cases non decouvertes
-      jeux[y][x].setEtat(1); // on indique que la case est d�couverte
-      if (jeux[y][x].getChiffre() == 0) { // Si le nombre de mines autour est nul, on d�couvre les cases autour
-        decouvrirPartiel1(x - 1, y - 1);
-        decouvrirPartiel1(x - 1, y);
-        decouvrirPartiel1(x - 1, y + 1);
-        decouvrirPartiel1(x, y - 1);
-        decouvrirPartiel1(x, y + 1);
-        decouvrirPartiel1(x + 1, y - 1);
-        decouvrirPartiel1(x + 1, y);
-        decouvrirPartiel1(x + 1, y + 1);
+      jeux[y][x].setEtat(1);
+      if (jeux[y][x].getChiffre() == 0) {
+        retourner(x - 1, y - 1);
+        retourner(x - 1, y);
+        retourner(x - 1, y + 1);
+        retourner(x, y - 1);
+        retourner(x, y + 1);
+        retourner(x + 1, y - 1);
+        retourner(x + 1, y);
+        retourner(x + 1, y + 1);
       }
     }
 
-    // Si on est au dessus d'un chiffre
-    else if (jeux[y][x].getEtat() == 1 && jeux[y][x].getChiffre() != 0) {
-      int n = 0; // on compte le nombre de drapeaux plac�s
-      if (decouvrirPartiel2(x - 1, y - 1))
-        n++;
-      if (decouvrirPartiel2(x - 1, y))
-        n++;
-      if (decouvrirPartiel2(x - 1, y + 1))
-        n++;
-      if (decouvrirPartiel2(x, y - 1))
-        n++;
-      if (decouvrirPartiel2(x, y + 1))
-        n++;
-      if (decouvrirPartiel2(x + 1, y - 1))
-        n++;
-      if (decouvrirPartiel2(x + 1, y))
-        n++;
-      if (decouvrirPartiel2(x + 1, y + 1))
-        n++;
-
-      if (n == jeux[y][x].getChiffre()) {
-        if (decouvrirPartiel3(x - 1, y - 1))
-          decouvre(y - 1, x - 1);
-        if (decouvrirPartiel3(x - 1, y))
-          decouvre(y, x - 1);
-        if (decouvrirPartiel3(x - 1, y + 1))
-          decouvre(y + 1, x - 1);
-        if (decouvrirPartiel3(x, y - 1))
-          decouvre(y - 1, x);
-        if (decouvrirPartiel3(x, y + 1))
-          decouvre(y + 1, x);
-        if (decouvrirPartiel3(x + 1, y - 1))
-          decouvre(y - 1, x + 1);
-        if (decouvrirPartiel3(x + 1, y))
-          decouvre(y, x + 1);
-        if (decouvrirPartiel3(x + 1, y + 1))
-          decouvre(y + 1, x + 1);
-      }
-    }
-
-    // Si on clique sur une mine
     else if ((jeux[y][x].getEtat() == 0 || jeux[y][x].getEtat() == 3) && jeux[y][x].isMine()) {
-      temps.cancel(); // fin du timer
-      jeux[y][x].setEtat(4); //met le fond du mine cliquer en rouge
-      //boutonNouveau.setIcon(boum);
-      for (int i = 0; i < HAUTEUR; i++) {
-        for (int j = 0; j < LARGEUR; j++) {
-          jeux[i][j].removeMouseListener(this); // on bloque les cases restantes
+      temps.cancel();
+      jeux[y][x].setEtat(4);
+      for (int i = 0; i < hauteur; i++) {
+        for (int j = 0; j < largeur; j++) {
+          jeux[i][j].removeMouseListener(this);
           jeux[i][j].setBlocked(true);
-          if (!(y == i && x == j) && mines.charAt(i * LARGEUR + j) == '1' && jeux[i][j].getEtat() != 2)
-            jeux[i][j].setEtat(5); // on  affiche les mines restantes
+          if (!(y == i && x == j) && mines.charAt(i * largeur + j) == '1' && jeux[i][j].getEtat() != 2)
+            jeux[i][j].setEtat(5);
         }
       }
-      // on affiche les erreurs
-      for (int i = 0; i < HAUTEUR; i++) {
-        for (int j = 0; j < LARGEUR; j++) {
-          if (jeux[i][j].getEtat() == 2 && !jeux[i][j].isMine())
-            jeux[i][j].setEtat(6);
-        }
-      }
+      perdre();
+    nb_perdue++;
     }
-    // Si on gagne, c'est  dire le nombre de cases restantes est egal au nombre de mines restantes
     if (nCases == nMines && !jeux[0][0].isBlocked()) {
-      temps.cancel(); // fin du timer
-      st.gagner();
+      temps.cancel();
       affMines.setText(String.valueOf(0));
-      for (int i = 0; i < HAUTEUR; i++) {
-        for (int j = 0; j < LARGEUR; j++) {
-          jeux[i][j].removeMouseListener(this); // on bloque les cases
+      for (int i = 0; i < hauteur; i++) {
+        for (int j = 0; j < largeur; j++) {
+          jeux[i][j].removeMouseListener(this);
           jeux[i][j].setBlocked(true);
           if (jeux[i][j].isMine())
             jeux[i][j].setEtat(2);
         }
       }
+      gagner();
+      nb_gagnee++;
     }
   }
 
-  // si la case existe, on la d�couvre et si necessaire, on decouvre aussi  des cases autour
-  public void decouvrirPartiel1(int x, int y) {
-    if (x >= 0 && y >= 0 && x < LARGEUR && y < HAUTEUR) {
+  public void retourner(int x, int y) {
+    if (x >= 0 && y >= 0 && x < largeur && y < hauteur) {
       if (jeux[y][x].getEtat() == 0 && jeux[y][x].getChiffre() != 0) {
         jeux[y][x].setEtat(1);
         nCases--;
       }
       if (jeux[y][x].getEtat() == 0 && jeux[y][x].getChiffre() == 0)
-        decouvre(y, x); // Si le nombre de mines autour est nul, on d�couvre les cases autour
+        decouvre(y, x);
     }
   }
 
-  // v�rifie si la case existe et si elle porte un drapeau
-  public boolean decouvrirPartiel2(int x, int y) {
-    if (x >= 0 && y >= 0 && x < LARGEUR && y < HAUTEUR) {
-      if (jeux[y][x].getEtat() == 2)
-        return true;
-    }
-    return false;
-  }
-
-  public boolean decouvrirPartiel3(int x, int y) {
-    if (x >= 0 && y >= 0 && x < LARGEUR && y < HAUTEUR) {
-      if (jeux[y][x].getEtat() == 0 || jeux[y][x].getEtat() == 3)
-        return true;
-    }
-    return false;
-  }
-
-  public void windowOpened(WindowEvent e) {
-  }
 
   public void windowClosing(WindowEvent e) {
-    temps.stop(); // stop le timer avant de quitter
+    temps.stop();
     System.exit(0);
   }
 
-  public void windowClosed(WindowEvent e) {
-  }
 
-  public void windowIconified(WindowEvent e) {
-    try {
-      temps.suspend();
-    }
-    catch (Exception esc) {
-    }
-  }
-
-  public void windowDeiconified(WindowEvent e) {
-    try {
-      temps.resume();
-    } //reprise du jeu (et du timer)
-    catch (Exception esc) {
-    }
-  }
-
-  public void windowActivated(WindowEvent e) {
-  }
-
-  public void windowDeactivated(WindowEvent e) {
-  }
-
-  //Evenements lies au menu
   public void actionPerformed(ActionEvent e) {
     if (e.getSource() == menuNouveau)
       nouveau();
@@ -658,7 +473,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
     else if (e.getSource() == menuDebutant && !menuDebutant.isSelected())
       menuDebutant.setSelected(true);
     else if (e.getSource() == menuIntermediaire && TYPE != 2) {
-      this.dispose(); // on d�truit la fenetre
+      this.dispose();
       System.gc();
       if (TYPE == 2)
         menuIntermediaire.setSelected(true);
@@ -667,7 +482,7 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
             !menuIntermediaire.isSelected())
       menuIntermediaire.setSelected(true);
     else if (e.getSource() == menuExpert && TYPE != 3) {
-      this.dispose(); // on d�truit la fenetre
+      this.dispose();
       System.gc();
       if (TYPE == 3)
         menuExpert.setSelected(true);
@@ -688,5 +503,72 @@ public class Demineur extends JFrame implements MouseListener, WindowListener, A
               (int) this.getLocation().getY() + 20);
       app.setVisible(true);
     }
+    else if (e.getSource() == stat) {
+      Statistiques app = new Statistiques(this,"Statistiques",getNb(),getNb_gagnee(),getNb_perdue());
+      app.setLocation((int) this.getLocation().getX() + 20,
+              (int) this.getLocation().getY() + 20);
+      app.setVisible(true);
+    }
+  }
+}
+class Help extends JDialog implements ActionListener {
+  private JPanel panel = new JPanel();
+  private GridBagLayout gridBagLayout = new GridBagLayout();
+  private JLabel titre = new JLabel();
+  private JLabel info = new JLabel();
+  private JLabel lien = new JLabel();
+  private Border border1;
+
+  public Help(Demineur demineur, String title, boolean modal) {
+    try {
+      jbInit(title);
+      pack();
+    }
+    catch(Exception ex) {
+      ex.printStackTrace();
+    }
+  }
+  private void jbInit(String title) throws Exception {
+    border1 = BorderFactory.createCompoundBorder(
+            BorderFactory.createBevelBorder(
+                    BevelBorder.RAISED,SystemColor.info,
+                    SystemColor.info,
+                    new Color(109, 109, 109),
+                    new Color(156, 156, 156)
+            ),
+            BorderFactory.createEmptyBorder(0,10,0,10)
+    );
+    panel.setLayout(gridBagLayout);
+    panel.setPreferredSize(new Dimension(530, 400));
+    titre.setFont(new java.awt.Font("Serif", 1, 20));
+    titre.setForeground(SystemColor.info);
+    titre.setBorder(border1);
+    titre.setPreferredSize(new Dimension(131, 50));
+    titre.setText(title);
+    info.setForeground(Color.black);
+    info.setPreferredSize(new Dimension(300, 300));
+
+    info.setText("<html>Ceci est un jeu demineur implemente en Java<br>" +
+            "Le Démineur est un jeu vidéo de réflexion dont le but est de decouvrir toutes les cases en faisant attention a <br>" +
+            "ne decouvrir ceux contenant des mines" +"<br>" +
+            "Le champ de mines du Démineur est représenté par une grille, qui peut avoir différentes formes : deux ou trois dimensions, pavage rectangulaire ou non, etc.\n" +
+            "Chaque case de la grille peut soit cacher une mine, soit être vide. Le but du jeu est de découvrir toutes les cases libres sans faire exploser les mines, c'est-à-dire sans cliquer sur les cases qui les dissimulent.\n" +
+            "Lorsque le joueur clique sur une case libre comportant au moins une mine dans l'une de ses cases avoisinantes, un chiffre apparaît, indiquant ce nombre de mines. Si en revanche toutes les cases adjacentes sont vides, une case vide est affichée et la même opération est répétée sur ces cases, et ce jusqu'à ce que la zone vide soit entièrement délimitée par des chiffres. En comparant les différentes informations récoltées, le joueur peut ainsi progresser dans le déminage du terrain. S'il se trompe et clique sur une mine, il a perdu."+
+            "</html>");
+    lien.setForeground(Color.red);
+    lien.setText("https://fr.wikipedia.org/wiki/D%C3%A9mineur_(genre_de_jeu_vid%C3%A9o)");
+    panel.setBackground(SystemColor.activeCaption);
+    getContentPane().add(panel);
+    panel.add(titre,      new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0
+            ,GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+    panel.add(info,      new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0
+            ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+    panel.add(lien,    new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0
+            ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+
+  }
+
+  public void actionPerformed(ActionEvent e) {
+    this.setVisible(false);
   }
 }

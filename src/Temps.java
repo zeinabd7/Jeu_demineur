@@ -21,7 +21,7 @@ public class Temps implements Runnable {
       }
       catch(java.lang.InterruptedException e) {}
       int time = Integer.valueOf(aff.getText());
-      if (marche && time<999) {//faire plus de 999s, c'est quand m�me beaucoup...
+      if (marche && time<999) {
         aff.setText(String.valueOf(time+1));
       }
 
